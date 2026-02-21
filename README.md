@@ -11,7 +11,7 @@ O sistema implementa uma estrutura hierárquica onde:
 - **Dados** são avaliados por votação para determinar confiabilidade
 - **Valores** são calculados usando o valor desse dado (numero de pessoas com acesso a internet, por exemplo n internet/n total). Note q esse numero precisa estar entre 0 e 1.
 - **Penalizações** são aplicadas via softmin adaptativo
-- **Consistência** é verificada através de modelo K-SAT
+- **Consistência** é verificada através de modelo random K-SAT, where k is the human population
 
 ## Principais Componentes
 
