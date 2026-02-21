@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: dindin_password
       POSTGRES_DB: dindin
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
@@ -21,7 +21,7 @@ services:
   api:
     build: .
     ports:
-      - "8000:8000"
+      - "8002:8000"  # Changed to avoid port conflict
     environment:
       DATABASE_URL: postgresql://dindin:dindin_password@postgres:5432/dindin
     depends_on:
@@ -29,7 +29,28 @@ services:
         condition: service_healthy
     volumes:
       - ./app:/app/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: >
+      bash -c "
+        python ensure_coin_market.py &&
+        uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  frontend:
+    image: python:3.11-slim
+    working_dir: /app
+    ports:
+      - "3002:3000"  # Changed to avoid port conflict
+    volumes:
+      - ./frontend:/app/frontend
+      - ./frontend_server.py:/app/frontend_server.py
+      - ./requirements.txt:/app/requirements.txt
+    command: >
+      bash -c "
+        pip install fastapi uvicorn &&
+        python frontend_server.py
+      "
+    depends_on:
+      - api
 
 volumes:
   postgres_data:

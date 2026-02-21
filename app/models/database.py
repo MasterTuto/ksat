@@ -45,6 +45,8 @@ class User(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = Column(String(255), unique=True, nullable=False)
     email = Column(String(255), unique=True, nullable=False)
+    password_hash = Column(String(255), nullable=False, default="")
+    currency_balance = Column(DECIMAL(15, 8), default=1000.0)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
@@ -68,7 +70,7 @@ class Market(Base):
 
     metrics = relationship("Metric", back_populates="market")
     market_value = relationship("MarketValue", back_populates="market", uselist=False)
-    audit_logs = relationship("AuditLog", back_populates="entity_market")
+    # Removida a relação problemática com audit_logs
 
 
 class Metric(Base):
@@ -89,7 +91,7 @@ class Metric(Base):
     market = relationship("Market", back_populates="metrics")
     data_points = relationship("DataPoint", back_populates="metric")
     metric_value = relationship("MetricValue", back_populates="metric", uselist=False)
-    audit_logs = relationship("AuditLog", back_populates="entity_metric")
+    # Removida a relação problemática com audit_logs
 
 
 class ExternalSource(Base):
@@ -135,7 +137,7 @@ class DataPoint(Base):
     metric = relationship("Metric", back_populates="data_points")
     source = relationship("ExternalSource", back_populates="data_points")
     votes = relationship("Vote", back_populates="data_point")
-    audit_logs = relationship("AuditLog", back_populates="entity_data_point")
+    # Removida a relação problemática com audit_logs
 
 
 class Vote(Base):
@@ -216,21 +218,7 @@ class AuditLog(Base):
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     user = relationship("User", back_populates="audit_logs")
-    entity_market = relationship(
-        "Market",
-        foreign_keys=[entity_id],
-        primaryjoin="and_(AuditLog.entity_type=='market', Market.id==AuditLog.entity_id)",
-    )
-    entity_metric = relationship(
-        "Metric",
-        foreign_keys=[entity_id],
-        primaryjoin="and_(AuditLog.entity_type=='metric', Metric.id==AuditLog.entity_id)",
-    )
-    entity_data_point = relationship(
-        "DataPoint",
-        foreign_keys=[entity_id],
-        primaryjoin="and_(AuditLog.entity_type=='data_point', DataPoint.id==AuditLog.entity_id)",
-    )
+    # Removidas todas as relações problemáticas com entidades específicas
 
 
 def get_db():

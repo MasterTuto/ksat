@@ -1,58 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
-import json
+from typing import List, Optional
+import uuid
 
-from app.models.database import (
-    get_db,
-    User,
-    Market,
-    Metric,
-    ExternalSource,
-    DataPoint,
-    Vote,
-    MetricValue,
-    MarketValue,
-    GlobalCurrencyValue,
-    AuditLog,
-)
-from app.schemas.schemas import (
-    UserCreate,
-    UserUpdate,
-    User as UserSchema,
-    MarketCreate,
-    MarketUpdate,
-    Market as MarketSchema,
-    MarketWithMetrics,
-    MetricCreate,
-    MetricUpdate,
-    Metric as MetricSchema,
-    MetricWithDataPoints,
-    ExternalSourceCreate,
-    ExternalSourceUpdate,
-    ExternalSource as ExternalSourceSchema,
-    DataPointCreate,
-    DataPointUpdate,
-    DataPoint as DataPointSchema,
-    DataPointWithVotes,
-    VoteCreate,
-    Vote as VoteSchema,
-    MetricValueResponse,
-    MarketValueResponse,
-    GlobalCurrencyValueResponse,
-    AuditLogResponse,
-    SoftminRequest,
-    SoftminResponse,
-    BinarySearchRequest,
-    BinarySearchResponse,
-    KSatConsistencyResponse,
-)
-from app.math.engine import MathematicalEngine
-from app.services.vote_service import VoteService
-from app.services.calculation_service import CalculationService
-from app.services.audit_service import AuditService
-from uuid import UUID
+from app.models.database import get_db, DataPoint
+from app.schemas.schemas import DataPoint as DataPointSchema
+
+# Simple API for data points with filtering
 
 app = FastAPI(
     title="Dindin API",
@@ -247,9 +201,27 @@ def create_data_point(data_point: DataPointCreate, db: Session = Depends(get_db)
     db.refresh(db_data_point)
 
     # Criar log de auditoria
-    AuditService.log_create(db, "data_point", db_data_point.id, db_data_point.dict())
+    AuditService.log_create(
+        db, "data_point", str(db_data_point.id), db_data_point.dict()
+    )
 
     return db_data_point
+
+
+@app.get("/data-points/", response_model=List[DataPointSchema])
+def read_data_points(
+    metric_id: Optional[str] = Query(None, description="Filter by metric ID"),
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+):
+    query = db.query(DataPoint)
+
+    if metric_id:
+        query = query.filter(DataPoint.metric_id == metric_id)
+
+    data_points = query.offset(skip).limit(limit).all()
+    return data_points
 
 
 @app.get("/data-points/{data_point_id}", response_model=DataPointWithVotes)

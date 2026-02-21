@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dindin - Market Interface</title>
+</head>
+<body>
+    <h1>Dindin Market System</h1>
+    
+    <div id="navigation">
+        <button id="show-markets">List Markets</button>
+        <button id="show-create-market">Create Market</button>
+        <button id="show-data-sources">Add Data Sources</button>
+        <button id="show-explore">Explore & Vote</button>
+    </div>
+    
+    <hr>
+    
+    <!-- List Markets Section -->
+    <div id="markets-section" style="display: none;">
+        <h2>Markets</h2>
+        <div id="markets-list">
+            Loading markets...
+        </div>
+    </div>
+    
+    <!-- Create Market Section -->
+    <div id="create-market-section" style="display: none;">
+        <h2>Create New Market</h2>
+        <form id="market-form">
+            <div>
+                <label>Market Name:</label>
+                <input type="text" id="market-name" required>
+            </div>
+            <div>
+                <label>Description:</label>
+                <textarea id="market-description"></textarea>
+            </div>
+            <div>
+                <button type="submit">Create Market</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Add Data Sources Section -->
+    <div id="data-sources-section" style="display: none;">
+        <h2>Add Data Sources</h2>
+        <div id="market-selector">
+            <label>Select Market:</label>
+            <select id="market-select">
+                <option value="">Loading markets...</option>
+            </select>
+        </div>
+        
+        <form id="data-source-form">
+            <div>
+                <label>Data Point Value:</label>
+                <input type="number" id="data-value" step="any" required>
+            </div>
+            <div>
+                <label>Source Name:</label>
+                <input type="text" id="source-name" required>
+            </div>
+            <div>
+                <label>Source URL:</label>
+                <input type="text" id="source-url">
+            </div>
+            <div>
+                <label>Time Horizon (hours):</label>
+                <input type="number" id="time-horizon" min="1" value="24" required>
+            </div>
+            <div>
+                <button type="submit">Add Data Source</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Explore & Vote Section -->
+    <div id="explore-section" style="display: none;">
+        <h2>Explore Markets & Vote</h2>
+        
+        <div id="explore-markets">
+            <h3>Markets</h3>
+            <div id="explore-markets-list">
+                Loading markets...
+            </div>
+        </div>
+        
+        <div id="explore-metrics" style="display: none;">
+            <h3>Metrics</h3>
+            <div id="explore-metrics-list">
+                Loading metrics...
+            </div>
+        </div>
+        
+        <div id="explore-data" style="display: none;">
+            <h3>Data & Sources</h3>
+            <div id="explore-data-list">
+                Loading data points...
+            </div>
+        </div>
+        
+        <div id="explore-voting" style="display: none;">
+            <h3>Vote with Real Money</h3>
+            <div id="explore-voting-content">
+                Select a market to view voting options...
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:8002';
+        let currentData = {
+            markets: [],
+            dataPoints: [],
+            votes: []
+        };
+        
+        // Navigation event listeners
+        document.getElementById('show-markets').addEventListener('click', showMarkets);
+        document.getElementById('show-create-market').addEventListener('click', showCreateMarket);
+        document.getElementById('show-data-sources').addEventListener('click', showDataSources);
+        document.getElementById('show-explore').addEventListener('click', showExplore);
+        
+        // Form event listeners
+        document.getElementById('market-form').addEventListener('submit', createMarket);
+        document.getElementById('data-source-form').addEventListener('submit', addDataSource);
+        
+        // Show/hide sections
+        function hideAllSections() {
+            document.getElementById('markets-section').style.display = 'none';
+            document.getElementById('create-market-section').style.display = 'none';
+            document.getElementById('data-sources-section').style.display = 'none';
+            document.getElementById('evaluate-section').style.display = 'none';
+            document.getElementById('vote-section').style.display = 'none';
+        }
+        
+        function showMarkets() {
+            hideAllSections();
+            document.getElementById('markets-section').style.display = 'block';
+            loadMarkets();
+        }
+        
+        function showCreateMarket() {
+            hideAllSections();
+            document.getElementById('create-market-section').style.display = 'block';
+        }
+        
+        function showDataSources() {
+            hideAllSections();
+            document.getElementById('data-sources-section').style.display = 'block';
+            loadMarketsForSelect();
+        }
+        
+        function showExplore() {
+            hideAllSections();
+            document.getElementById('explore-section').style.display = 'block';
+            loadExploreMarkets();
+        }
+        
+        // Explore functionality
+        async function loadExploreMarkets() {
+            try {
+                const response = await fetch(`${API_URL}/markets/`);
+                const markets = await response.json();
+                
+                const listDiv = document.getElementById('explore-markets-list');
+                listDiv.innerHTML = '';
+                
+                if (markets.length === 0) {
+                    listDiv.innerHTML = '<p>No markets found. Create one!</p>';
+                    return;
+                }
+                
+                markets.forEach(market => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <div style="margin: 10px 0; padding: 15px; border: 1px solid #ccc; cursor: pointer;" onclick="selectMarket('${market.id}')">
+                            <h3>${market.name}</h3>
+                            <p>${market.description || 'No description'}</p>
+                            <p><strong>Status:</strong> ${market.is_active ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${new Date(market.created_at).toLocaleString()}</p>
+                            <button onclick="showMoneyVoting()" style="margin-top: 10px; background-color: #4CAF50; color: white; border: none; padding: 8px 16px;">Vote with Money</button>
+                        </div>
+                    `;
+                    listDiv.appendChild(div);
+                });
+                
+                currentData.markets = markets;
+            } catch (error) {
+                console.error('Error loading markets:', error);
+                document.getElementById('explore-markets-list').textContent = 'Error loading markets';
+            }
+        }
+        
+        async function selectMarket(marketId) {
+            try {
+                // Get market details with metrics
+                const marketResponse = await fetch(`${API_URL}/markets/${marketId}`);
+                const market = await marketResponse.json();
+                
+                // Show metrics section
+                document.getElementById('explore-metrics').style.display = 'block';
+                const metricsListDiv = document.getElementById('explore-metrics-list');
+                metricsListDiv.innerHTML = '';
+                
+                if (market.metrics && market.metrics.length > 0) {
+                    market.metrics.forEach(metric => {
+                        const div = document.createElement('div');
+                        div.innerHTML = `
+                            <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; cursor: pointer;" onclick="selectMetric('${metric.id}')">
+                                <h4>${metric.name}</h4>
+                                <p>${metric.description || 'No description'}</p>
+                                <p><strong>Weight:</strong> ${metric.weight}</p>
+                            </div>
+                        `;
+                        metricsListDiv.appendChild(div);
+                    });
+                } else {
+                    metricsListDiv.innerHTML = '<p>No metrics found for this market.</p>';
+                }
+                
+                // Store current market
+                currentData.selectedMarket = market;
+                
+            } catch (error) {
+                console.error('Error loading market details:', error);
+                alert('Error loading market details');
+            }
+        }
+        
+        async function selectMetric(metricId) {
+            try {
+                // Get data points for this metric
+                const dataResponse = await fetch(`${API_URL}/data-points/?metric_id=${metricId}`);
+                const dataPoints = await dataResponse.json();
+                
+                // Show data section
+                document.getElementById('explore-data').style.display = 'block';
+                const dataListDiv = document.getElementById('explore-data-list');
+                dataListDiv.innerHTML = '';
+                
+                if (dataPoints.length > 0) {
+                    dataPoints.forEach(dp => {
+                        const div = document.createElement('div');
+                        div.innerHTML = `
+                            <div style="margin: 10px 0; padding: 15px; border: 1px solid #eee;">
+                                <h4>Data Point</h4>
+                                <p><strong>Value:</strong> ${dp.value}</p>
+                                <p><strong>Source:</strong> ${dp.source_id}</p>
+                                <p><strong>Time Horizon:</strong> ${dp.time_horizon_hours} hours</p>
+                                <p><strong>Participation:</strong> ${dp.participation_rate}</p>
+                                <p><strong>Reliability:</strong> ${dp.is_reliable ? 'Yes' : 'No'}</p>
+                                
+                                <!-- Cost-free voting section -->
+                                <div style="margin-top: 10px; padding: 10px; background-color: #f9f9f9;">
+                                    <h5>Cost-Free Voting</h5>
+                                    <button onclick="voteCostFree('${dp.id}', true)">Vote Yes (Reliable)</button>
+                                    <button onclick="voteCostFree('${dp.id}', false)">Vote No (Not Reliable)</button>
+                                </div>
+                            </div>
+                        `;
+                        dataListDiv.appendChild(div);
+                    });
+                } else {
+                    dataListDiv.innerHTML = '<p>No data points found for this metric.</p>';
+                }
+                
+                // Store current data points
+                currentData.selectedDataPoints = dataPoints;
+                
+            } catch (error) {
+                console.error('Error loading data points:', error);
+                alert('Error loading data points');
+            }
+        }
+        
+        // API Functions
+        async function loadMarkets() {
+            try {
+                const response = await fetch(`${API_URL}/markets/`);
+                const markets = await response.json();
+                
+                const listDiv = document.getElementById('markets-list');
+                listDiv.innerHTML = '';
+                
+                if (markets.length === 0) {
+                    listDiv.innerHTML = '<p>No markets found. Create one!</p>';
+                    return;
+                }
+                
+                markets.forEach(market => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <h3>${market.name}</h3>
+                        <p>${market.description || 'No description'}</p>
+                        <p>Active: ${market.is_active ? 'Yes' : 'No'}</p>
+                        <p>Created: ${new Date(market.created_at).toLocaleString()}</p>
+                        <hr>
+                    `;
+                    listDiv.appendChild(div);
+                });
+                
+                currentData.markets = markets;
+            } catch (error) {
+                console.error('Error loading markets:', error);
+                document.getElementById('markets-list').textContent = 'Error loading markets';
+            }
+        }
+        
+        async function loadMarketsForSelect() {
+            try {
+                const response = await fetch(`${API_URL}/markets/`);
+                const markets = await response.json();
+                
+                const select = document.getElementById('market-select');
+                select.innerHTML = '<option value="">Select a market...</option>';
+                
+                markets.forEach(market => {
+                    const option = document.createElement('option');
+                    option.value = market.id;
+                    option.textContent = market.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading markets for select:', error);
+            }
+        }
+        
+        async function createMarket(event) {
+            event.preventDefault();
+            
+            const marketData = {
+                name: document.getElementById('market-name').value,
+                description: document.getElementById('market-description').value,
+                is_active: true
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/markets/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(marketData)
+                });
+                
+                if (response.ok) {
+                    alert('Market created successfully!');
+                    document.getElementById('market-form').reset();
+                    showMarkets();
+                } else {
+                    const error = await response.json();
+                    alert(`Error creating market: ${error.detail || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error creating market:', error);
+                alert('Error creating market');
+            }
+        }
+        
+        async function addDataSource(event) {
+            event.preventDefault();
+            
+            const marketId = document.getElementById('market-select').value;
+            if (!marketId) {
+                alert('Please select a market');
+                return;
+            }
+            
+            // First create external source
+            const sourceData = {
+                name: document.getElementById('source-name').value,
+                url: document.getElementById('source-url').value,
+                verification_method: 'Manual'
+            };
+            
+            try {
+                const sourceResponse = await fetch(`${API_URL}/external-sources/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(sourceData)
+                });
+                
+                if (!sourceResponse.ok) {
+                    throw new Error('Failed to create source');
+                }
+                
+                const source = await sourceResponse.json();
+                
+                // Now create data point
+                const dataPointData = {
+                    metric_id: marketId, // Simplified - in real app you'd select metric
+                    source_id: source.id,
+                    value: parseFloat(document.getElementById('data-value').value),
+                    time_horizon_hours: parseInt(document.getElementById('time-horizon').value)
+                };
+                
+                const dataResponse = await fetch(`${API_URL}/data-points/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dataPointData)
+                });
+                
+                if (dataResponse.ok) {
+                    alert('Data source added successfully!');
+                    document.getElementById('data-source-form').reset();
+                } else {
+                    const error = await dataResponse.json();
+                    alert(`Error adding data source: ${error.detail || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error adding data source:', error);
+                alert('Error adding data source');
+            }
+        }
+        
+        async function loadDataPoints() {
+            try {
+                const response = await fetch(`${API_URL}/data-points/`);
+                const dataPoints = await response.json();
+                
+                const listDiv = document.getElementById('data-points-list');
+                listDiv.innerHTML = '';
+                
+                dataPoints.forEach(dp => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <h3>Data Point: ${dp.value}</h3>
+                        <p>Source: ${dp.source_id}</p>
+                        <p>Time Horizon: ${dp.time_horizon_hours} hours</p>
+                        <p>Reliable: ${dp.is_reliable ? 'Yes' : 'No'}</p>
+                        <p>Participation Rate: ${dp.participation_rate}</p>
+                        <p>Latency: ${dp.latency}</p>
+                        <hr>
+                    `;
+                    listDiv.appendChild(div);
+                });
+                
+                currentData.dataPoints = dataPoints;
+            } catch (error) {
+                console.error('Error loading data points:', error);
+                document.getElementById('data-points-list').textContent = 'Error loading data points';
+            }
+        }
+        
+        async function loadMarketsForVoting() {
+            try {
+                const response = await fetch(`${API_URL}/markets/`);
+                const markets = await response.json();
+                
+                const listDiv = document.getElementById('vote-markets-list');
+                listDiv.innerHTML = '';
+                
+                if (markets.length === 0) {
+                    listDiv.innerHTML = '<p>No markets found. Create one!</p>';
+                    return;
+                }
+                
+                // Get data points for each market to enable voting
+                for (const market of markets) {
+                    // Get metrics for this market
+                    const metricsResponse = await fetch(`${API_URL}/markets/${market.id}`);
+                    const marketWithMetrics = await metricsResponse.json();
+                    
+                    // Get data points for each metric
+                    let dataPointsHtml = '';
+                    
+                    if (marketWithMetrics.metrics && marketWithMetrics.metrics.length > 0) {
+                        for (const metric of marketWithMetrics.metrics) {
+                            const dataPointsResponse = await fetch(`${API_URL}/data-points/?metric_id=${metric.id}`);
+                            const dataPoints = await dataPointsResponse.json();
+                            
+                            if (dataPoints.length > 0) {
+                                dataPointsHtml += '<h4>Data Points:</h4>';
+                                dataPoints.forEach(dp => {
+                                    dataPointsHtml += `
+                                        <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc;">
+                                            <p><strong>Value:</strong> ${dp.value}</p>
+                                            <p><strong>Source:</strong> ${dp.source_id}</p>
+                                            <p><strong>Participation:</strong> ${dp.participation_rate}</p>
+                                            <p><strong>Reliability:</strong> ${dp.is_reliable ? 'Yes' : 'No'}</p>
+                                            <button onclick="voteOnDataPoint('${dp.id}', true)">Vote Yes (Reliable)</button>
+                                            <button onclick="voteOnDataPoint('${dp.id}', false)">Vote No (Not Reliable)</button>
+                                        </div>
+                                    `;
+                                });
+                            }
+                        }
+                    }
+                    
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <h3>${market.name}</h3>
+                        <p>${market.description || 'No description'}</p>
+                        <p><strong>Market Question:</strong> ${market.name}</p>
+                        ${dataPointsHtml || '<p>No data points available for this market</p>'}
+                        <hr>
+                    `;
+                    listDiv.appendChild(div);
+                }
+            } catch (error) {
+                console.error('Error loading markets for voting:', error);
+                document.getElementById('vote-markets-list').textContent = 'Error loading markets';
+            }
+        }
+        
+        // Show money voting section
+        async function showMoneyVoting() {
+            document.getElementById('explore-voting').style.display = 'block';
+            
+            if (!currentData.selectedMarket) {
+                document.getElementById('explore-voting-content').innerHTML = 
+                    '<p>Please select a market first.</p>';
+                return;
+            }
+            
+            // Get market value and voting statistics
+            try {
+                // Mock market value calculation - in real implementation this would come from API
+                const marketValue = 1/137; // Starting value
+                const yesVotes = 5; // Mock initial votes
+                const noVotes = 3;
+                const totalVotes = yesVotes + noVotes;
+                const yesPercentage = totalVotes > 0 ? (yesVotes / totalVotes * 100) : 0;
+                
+                // Calculate probability based on votes
+                const probability = yesPercentage / 100;
+                
+                // Calculate potential payout (simplified prediction market)
+                const potentialPayout = marketValue * probability;
+                
+                const votingContent = `
+                    <div style="padding: 20px; border: 1px solid #ccc;">
+                        <h3>Vote with Real Money on: ${currentData.selectedMarket.name}</h3>
+                        <p><strong>Market Question:</strong> ${currentData.selectedMarket.name}</p>
+                        
+                        <div style="margin: 15px 0; padding: 15px; background-color: #f0f8ff;">
+                            <h4>Market Analysis</h4>
+                            <p><strong>Current Market Value:</strong> ${marketValue.toFixed(8)}</p>
+                            <p><strong>Voting Statistics:</strong></p>
+                            <p>Yes Votes: ${yesVotes} (${yesPercentage.toFixed(1)}%)</p>
+                            <p>No Votes: ${noVotes} (${(100-yesPercentage).toFixed(1)}%)</p>
+                            <p><strong>Implied Probability:</strong> ${(probability * 100).toFixed(1)}%</p>
+                            <p><strong>Potential Payout if Yes:</strong> ${potentialPayout.toFixed(8)}</p>
+                        </div>
+                        
+                        <div style="margin: 15px 0; padding: 15px; background-color: #fff0f0;">
+                            <h4>Place Your Bet</h4>
+                            <p>Amount to bet:</p>
+                            <input type="number" id="bet-amount" min="0.00000001" step="0.00000001" value="0.01" style="width: 100px;">
+                            
+                            <p>Vote:</p>
+                            <button onclick="betOnMarket(true)" style="margin: 5px;">Bet YES (Reliable)</button>
+                            <button onclick="betOnMarket(false)" style="margin: 5px;">Bet NO (Not Reliable)</button>
+                        </div>
+                        
+                        <div style="margin: 15px 0; padding: 15px; background-color: #f9f9f9;">
+                            <h4>Decision Tree Visualization</h4>
+                            <div style="text-align: center; margin: 10px 0;">
+                                <div style="display: inline-block; width: 30px; height: 100px; background-color: #4CAF50; position: relative;">
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center; padding: 5px;">
+                                        ${(yesPercentage).toFixed(0)}%
+                                    </div>
+                                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                        YES
+                                    </div>
+                                </div>
+                                <div style="display: inline-block; width: 30px; height: 100px; background-color: #F44336; position: relative; margin-left: 10px;">
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center; padding: 5px;">
+                                        ${((100-yesPercentage)).toFixed(0)}%
+                                    </div>
+                                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                        NO
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="margin-top: 10px;">
+                                <small>The heights represent the accumulated voting percentage for each option.</small>
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('explore-voting-content').innerHTML = votingContent;
+                
+            } catch (error) {
+                console.error('Error loading market voting data:', error);
+                document.getElementById('explore-voting-content').innerHTML = 
+                    '<p>Error loading market voting data.</p>';
+            }
+        }
+        
+        // Money betting function
+        async function betOnMarket(betYes) {
+            const betAmount = parseFloat(document.getElementById('bet-amount').value);
+            
+            if (isNaN(betAmount) || betAmount <= 0) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+            
+            // Mock betting logic - in real implementation this would call API
+            const outcome = Math.random() > 0.5; // Random outcome for demo
+            const won = (outcome && betYes) || (!outcome && !betYes);
+            
+            if (won) {
+                alert(`You won! Your bet on ${betYes ? 'YES' : 'NO'} was correct.`);
+            } else {
+                alert(`You lost! Your bet on ${betYes ? 'YES' : 'NO'} was incorrect.`);
+            }
+        }
+        
+        // Initial load
+        showMarkets();
+    </script>
+</body>
+</html>

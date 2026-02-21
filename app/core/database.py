@@ -6,9 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Configuração do banco de dados
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://dindin:dindin_password@localhost:5432/dindin"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dindin.db")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
