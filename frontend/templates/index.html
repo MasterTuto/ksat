@@ -116,44 +116,43 @@
         };
         
         // Navigation event listeners
-        document.getElementById('show-markets').addEventListener('click', showMarkets);
-        document.getElementById('show-create-market').addEventListener('click', showCreateMarket);
-        document.getElementById('show-data-sources').addEventListener('click', showDataSources);
-        document.getElementById('show-explore').addEventListener('click', showExplore);
+        if (document.getElementById('show-markets'))  document.getElementById('show-markets').addEventListener('click', showMarkets);
+        if (document.getElementById('show-create-market'))  document.getElementById('show-create-market').addEventListener('click', showCreateMarket);
+        if (document.getElementById('show-data-sources'))  document.getElementById('show-data-sources').addEventListener('click', showDataSources);
+        if (document.getElementById('show-explore'))  document.getElementById('show-explore').addEventListener('click', showExplore);
         
         // Form event listeners
-        document.getElementById('market-form').addEventListener('submit', createMarket);
-        document.getElementById('data-source-form').addEventListener('submit', addDataSource);
+        if (document.getElementById('market-form'))  document.getElementById('market-form').addEventListener('submit', createMarket);
+        if (document.getElementById('data-source-form'))  document.getElementById('data-source-form').addEventListener('submit', addDataSource);
         
         // Show/hide sections
         function hideAllSections() {
-            document.getElementById('markets-section').style.display = 'none';
-            document.getElementById('create-market-section').style.display = 'none';
-            document.getElementById('data-sources-section').style.display = 'none';
-            document.getElementById('evaluate-section').style.display = 'none';
-            document.getElementById('vote-section').style.display = 'none';
+            if (document.getElementById('markets-section'))  document.getElementById('markets-section').style.display = 'none';
+            if (document.getElementById('create-market-section'))  document.getElementById('create-market-section').style.display = 'none';
+            if (document.getElementById('data-sources-section'))  document.getElementById('data-sources-section').style.display = 'none';
+            if (document.getElementById('vote-section'))  document.getElementById('vote-section').style.display = 'none';
         }
         
         function showMarkets() {
             hideAllSections();
-            document.getElementById('markets-section').style.display = 'block';
+            if (document.getElementById('markets-section'))  document.getElementById('markets-section').style.display = 'block';
             loadMarkets();
         }
         
         function showCreateMarket() {
             hideAllSections();
-            document.getElementById('create-market-section').style.display = 'block';
+            if (document.getElementById('create-market-section'))  document.getElementById('create-market-section').style.display = 'block';
         }
         
         function showDataSources() {
             hideAllSections();
-            document.getElementById('data-sources-section').style.display = 'block';
+            if (document.getElementById('data-sources-section'))  document.getElementById('data-sources-section').style.display = 'block';
             loadMarketsForSelect();
         }
         
         function showExplore() {
             hideAllSections();
-            document.getElementById('explore-section').style.display = 'block';
+            if (document.getElementById('explore-section'))  document.getElementById('explore-section').style.display = 'block';
             loadExploreMarkets();
         }
         
@@ -188,7 +187,7 @@
                 currentData.markets = markets;
             } catch (error) {
                 console.error('Error loading markets:', error);
-                document.getElementById('explore-markets-list').textContent = 'Error loading markets';
+                if (document.getElementById('explore-markets-list'))  document.getElementById('explore-markets-list').textContent = 'Error loading markets';
             }
         }
         
@@ -199,7 +198,7 @@
                 const market = await marketResponse.json();
                 
                 // Show metrics section
-                document.getElementById('explore-metrics').style.display = 'block';
+                if (document.getElementById('explore-metrics'))  document.getElementById('explore-metrics').style.display = 'block';
                 const metricsListDiv = document.getElementById('explore-metrics-list');
                 metricsListDiv.innerHTML = '';
                 
@@ -235,7 +234,7 @@
                 const dataPoints = await dataResponse.json();
                 
                 // Show data section
-                document.getElementById('explore-data').style.display = 'block';
+                if (document.getElementById('explore-data'))  document.getElementById('explore-data').style.display = 'block';
                 const dataListDiv = document.getElementById('explore-data-list');
                 dataListDiv.innerHTML = '';
                 
@@ -280,7 +279,7 @@
                 const response = await fetch(`${API_URL}/markets/`);
                 const markets = await response.json();
                 
-                const listDiv = document.getElementById('markets-list');
+                const listDiv =  document.getElementById('markets-list');
                 listDiv.innerHTML = '';
                 
                 if (markets.length === 0) {
@@ -303,7 +302,7 @@
                 currentData.markets = markets;
             } catch (error) {
                 console.error('Error loading markets:', error);
-                document.getElementById('markets-list').textContent = 'Error loading markets';
+                if (document.getElementById('markets-list'))  document.getElementById('markets-list').textContent = 'Error loading markets';
             }
         }
         
@@ -346,7 +345,7 @@
                 
                 if (response.ok) {
                     alert('Market created successfully!');
-                    document.getElementById('market-form').reset();
+                    if (document.getElementById('market-form'))  document.getElementById('market-form').reset();
                     showMarkets();
                 } else {
                     const error = await response.json();
@@ -369,8 +368,8 @@
             
             // First create external source
             const sourceData = {
-                name: document.getElementById('source-name').value,
-                url: document.getElementById('source-url').value,
+                name:  document.getElementById('source-name').value,
+                url:  document.getElementById('source-url').value,
                 verification_method: 'Manual'
             };
             
@@ -394,7 +393,7 @@
                     metric_id: marketId, // Simplified - in real app you'd select metric
                     source_id: source.id,
                     value: parseFloat(document.getElementById('data-value').value),
-                    time_horizon_hours: parseInt(document.getElementById('time-horizon').value)
+                    time_horizon_hours: parseInt( document.getElementById('time-horizon').value)
                 };
                 
                 const dataResponse = await fetch(`${API_URL}/data-points/`, {
@@ -407,7 +406,7 @@
                 
                 if (dataResponse.ok) {
                     alert('Data source added successfully!');
-                    document.getElementById('data-source-form').reset();
+                    if (document.getElementById('data-source-form'))  document.getElementById('data-source-form').reset();
                 } else {
                     const error = await dataResponse.json();
                     alert(`Error adding data source: ${error.detail || 'Unknown error'}`);
@@ -423,7 +422,7 @@
                 const response = await fetch(`${API_URL}/data-points/`);
                 const dataPoints = await response.json();
                 
-                const listDiv = document.getElementById('data-points-list');
+                const listDiv = (document.getElementById('data-points-list')) ;
                 listDiv.innerHTML = '';
                 
                 dataPoints.forEach(dp => {
@@ -443,7 +442,7 @@
                 currentData.dataPoints = dataPoints;
             } catch (error) {
                 console.error('Error loading data points:', error);
-                document.getElementById('data-points-list').textContent = 'Error loading data points';
+                if (document.getElementById('data-points-list'))  document.getElementById('data-points-list').textContent = 'Error loading data points';
             }
         }
         
@@ -452,7 +451,7 @@
                 const response = await fetch(`${API_URL}/markets/`);
                 const markets = await response.json();
                 
-                const listDiv = document.getElementById('vote-markets-list');
+                const listDiv = (document.getElementById('vote-markets-list'));
                 listDiv.innerHTML = '';
                 
                 if (markets.length === 0) {
@@ -504,16 +503,16 @@
                 }
             } catch (error) {
                 console.error('Error loading markets for voting:', error);
-                document.getElementById('vote-markets-list').textContent = 'Error loading markets';
+                if (document.getElementById('vote-markets-list'))  document.getElementById('vote-markets-list').textContent = 'Error loading markets';
             }
         }
         
         // Show money voting section
         async function showMoneyVoting() {
-            document.getElementById('explore-voting').style.display = 'block';
+            if (document.getElementById('explore-voting'))  document.getElementById('explore-voting').style.display = 'block';
             
             if (!currentData.selectedMarket) {
-                document.getElementById('explore-voting-content').innerHTML = 
+                if (document.getElementById('explore-voting-content'))  document.getElementById('explore-voting-content').innerHTML = 
                     '<p>Please select a market first.</p>';
                 return;
             }
@@ -586,18 +585,18 @@
                     </div>
                 `;
                 
-                document.getElementById('explore-voting-content').innerHTML = votingContent;
+                if (document.getElementById('explore-voting-content'))  document.getElementById('explore-voting-content').innerHTML = votingContent;
                 
             } catch (error) {
                 console.error('Error loading market voting data:', error);
-                document.getElementById('explore-voting-content').innerHTML = 
+                if (document.getElementById('explore-voting-content'))  document.getElementById('explore-voting-content').innerHTML = 
                     '<p>Error loading market voting data.</p>';
             }
         }
         
         // Money betting function
         async function betOnMarket(betYes) {
-            const betAmount = parseFloat(document.getElementById('bet-amount').value);
+            const betAmount = parseFloat( document.getElementById('bet-amount').value);
             
             if (isNaN(betAmount) || betAmount <= 0) {
                 alert('Please enter a valid bet amount');
