@@ -5,17 +5,11 @@ services:
     image: nginx:alpine
     container_name: nginx-proxy
     ports:
-      - "3001:80"
+      - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./nginx/ssl:/etc/ssl:ro
-      - ./nginx/logs:/var/log/nginx
-      - ./www/html:/var/www/html:ro
-      - ./www/static:/var/www/static:ro
-      - ./www/media:/var/www/media:ro
-      - ./www/certbot:/var/www/certbot:ro
+      - nginx:/etc/nginx/conf.d:ro
+      - nginx_logs:/var/log/nginx
     networks:
       - app-network
     restart: unless-stopped
@@ -85,6 +79,14 @@ services:
 
 volumes:
   postgres_data:
+  nginx:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./nginx/conf.d
+  nginx_logs:
+    driver: local
 
 networks:
   app-network:
