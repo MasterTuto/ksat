@@ -43,7 +43,7 @@ Implementa as fórmulas principais:
 ### 4. Frontend Mínimo
 
 Interface web simples sem styling que permite:
-- Visualizar mercado "Is this coin useful?" com valor inicial 1/137
+- Visualizar mercado "Is this coin useful?" com valor inicial 1/N (N=137)
 - Votar na confiabilidade dos dados
 - Monitorar valores em tempo real
 
@@ -89,7 +89,7 @@ E permite fácil modificação das portas no arquivo `docker-compose.yml`.
 ### Setup Inicial
 
 ```bash
-# Criar mercado inicial com valor 1/137
+# Criar mercado inicial com valor 1/N (N=137)
 docker-compose exec api python create_coin_market.py
 
 # O frontend já vai mostrar o mercado "Is this coin useful?"
@@ -144,7 +144,7 @@ Com a aplicação rodando, acesse:
 ## Fluxo de Trabalho Típico
 
 1. **Acessar Frontend**: http://localhost:3000
-2. **Visualizar Mercado**: "Is this coin useful?" com valor 1/137
+2. **Visualizar Mercado**: "Is this coin useful?" com valor 1/N (N=137)
 3. **Votar**: Usuários votam na confiabilidade dos dados
 4. **Monitorar**: Sistema atualiza valores dinamicamente
 5. **Observar**: Valor do mercado muda baseado nos votos
@@ -154,7 +154,7 @@ Com a aplicação rodando, acesse:
 O sistema vem pré-configurado com um mercado de demonstração:
 
 - **Pergunta**: "Is this coin useful?"
-- **Valor Inicial**: 1/137 (constante fundamental)
+- **Valor Inicial**: 1/N (N=137, constante fundamental)
 - **Métrica**: "usefulness" com peso 1.0
 - **Fonte**: "Initial Value" (sistema)
 - **Usuário Mock**: "mock_user" para testes

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script para criar o mercado inicial 'Is this coin useful?' com valor 1/137
+Script para criar o mercado inicial 'Is this coin useful?' com valor 1/N
 """
 
 import sys
@@ -22,11 +22,12 @@ from app.services.calculation_service import CalculationService
 from app.services.vote_service import VoteService
 from uuid import uuid4
 import math
+from config import N, INITIAL_COIN_VALUE
 
 
 def create_coin_market():
     """
-    Cria o mercado inicial 'Is this coin useful?' com valor 1/137
+    Cria o mercado inicial 'Is this coin useful?' com valor 1/N
     """
     db = SessionLocal()
 
@@ -68,8 +69,8 @@ def create_coin_market():
         db.commit()
         db.refresh(usefulness_metric)
 
-        # Criar ponto de dado inicial com valor 1/137
-        initial_value = 1 / 137
+        # Criar ponto de dado inicial com valor 1/N
+        initial_value = INITIAL_COIN_VALUE
         data_point = DataPoint(
             metric_id=usefulness_metric.id,
             source_id=source.id,
@@ -87,7 +88,7 @@ def create_coin_market():
         # Criar valor de métrica inicial calculado corretamente
         # metric_j = μ_j * latency_j
         # Onde latency_j vem dos dados confiáveis
-        initial_value = 1 / 137  # μ_j inicial
+        initial_value = INITIAL_COIN_VALUE  # μ_j inicial
         latency = 168.0  # latency_j inicial (1 semana)
         calculated_value = initial_value * latency  # metric_j = μ_j * latency_j
 
@@ -106,7 +107,7 @@ def create_coin_market():
         print(f"Market ID: {coin_market.id}")
         print(f"Metric ID: {usefulness_metric.id}")
         print(f"Data Point ID: {data_point.id}")
-        print(f"Initial Value: {initial_value} (1/137)")
+        print(f"Initial Value: {initial_value} (1/N, N={N})")
         print(f"User ID for testing: {user.id}")
 
     except Exception as e:

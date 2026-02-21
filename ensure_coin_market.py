@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Script simplificado para garantir que o mercado inicial 'Is this coin useful?'
-com valor 1/137 seja criado no banco de dados
+com valor 1/N seja criado no banco de dados
 """
 
 import sys
@@ -21,11 +21,12 @@ from app.models.database import (
 )
 from uuid import uuid4
 import math
+from config import N, INITIAL_COIN_VALUE
 
 
 def ensure_coin_market():
     """
-    Garante que o mercado inicial 'Is this coin useful?' com valor 1/137 exista no banco
+    Garante que o mercado inicial 'Is this coin useful?' com valor 1/N exista no banco
     """
     db = SessionLocal()
 
@@ -86,8 +87,8 @@ def ensure_coin_market():
         db.commit()
         db.refresh(usefulness_metric)
 
-        # Criar ponto de dado inicial com valor 1/137
-        initial_value = 1 / 137
+        # Criar ponto de dado inicial com valor 1/N
+        initial_value = INITIAL_COIN_VALUE
         data_point = DataPoint(
             metric_id=usefulness_metric.id,
             source_id=mock_source.id,
@@ -103,8 +104,8 @@ def ensure_coin_market():
         db.refresh(data_point)
 
         # Criar valor de métrica inicial calculado corretamente
-        # metric_j = μ_j * latency_j onde μ_j = 1/137
-        mu_value = 1 / 137  # μ_j inicial
+        # metric_j = μ_j * latency_j onde μ_j = 1/N
+        mu_value = INITIAL_COIN_VALUE  # μ_j inicial
         latency = 168.0  # latency_j inicial (1 semana)
         calculated_value = mu_value * latency  # metric_j = μ_j * latency_j
 
@@ -125,12 +126,12 @@ def ensure_coin_market():
         print(f"Market Name: 'Is this coin useful?'")
         print(f"Metric ID: {usefulness_metric.id}")
         print(f"Data Point ID: {data_point.id}")
-        print(f"Initial μ_j (value): {mu_value} (1/137)")
+        print(f"Initial μ_j (value): {mu_value} (1/N, N={N})")
         print(f"Initial latency: {latency}")
         print(f"Initial metric_j (calculated value): {calculated_value}")
         print(f"User ID for testing: {mock_user.id}")
         print(
-            "\nO valor 1/137 está persistido no banco como μ_j (valor inicial da métrica)"
+            f"\nO valor 1/N está persistido no banco como μ_j (valor inicial da métrica), onde N={N}"
         )
 
     except Exception as e:

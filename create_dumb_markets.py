@@ -20,6 +20,7 @@ from app.models.database import (
     MetricValue,
     MarketValue,
 )
+from config import N, INITIAL_COIN_VALUE
 from app.services.calculation_service import CalculationService
 from uuid import uuid4
 import math
@@ -270,8 +271,8 @@ def create_sample_markets():
                 for j in range(3):
                     source = random.choice(created_sources)
                     base_value = (
-                        1 / 137 if j == 0 else random.uniform(0.5, 2.0)
-                    )  # Primeiro data point com 1/137
+                        INITIAL_COIN_VALUE if j == 0 else random.uniform(0.5, 2.0)
+                    )  # Primeiro data point com 1/N
 
                     data_point = create_dumb_data_point(
                         metric.id, source.id, base_value

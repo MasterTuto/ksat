@@ -521,7 +521,8 @@
             // Get market value and voting statistics
             try {
                 // Mock market value calculation - in real implementation this would come from API
-                const marketValue = 1/137; // Starting value
+                const N = 137;
+                const marketValue = 1/N; // Starting value
                 const yesVotes = 5; // Mock initial votes
                 const noVotes = 3;
                 const totalVotes = yesVotes + noVotes;

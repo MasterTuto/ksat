@@ -1,10 +1,50 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Query
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import uuid
+from uuid import UUID
 
-from app.models.database import get_db, DataPoint
-from app.schemas.schemas import DataPoint as DataPointSchema
+from app.models.database import (
+    get_db,
+    DataPoint,
+    User,
+    Market,
+    Metric,
+    ExternalSource,
+    Vote,
+    AuditLog,
+)
+from app.schemas.schemas import (
+    DataPoint as DataPointSchema,
+    UserCreate,
+    UserUpdate,
+    UserSchema,
+    MarketCreate,
+    MarketUpdate,
+    MarketSchema,
+    MarketWithMetrics,
+    MetricCreate,
+    MetricSchema,
+    MetricWithDataPoints,
+    ExternalSourceCreate,
+    ExternalSourceSchema,
+    VoteCreate,
+    VoteSchema,
+    MetricValueResponse,
+    MarketValueResponse,
+    GlobalCurrencyValueResponse,
+    SoftminRequest,
+    SoftminResponse,
+    BinarySearchRequest,
+    BinarySearchResponse,
+    KSatConsistencyResponse,
+    AuditLogResponse,
+)
+from app.services.calculation_service import CalculationService
+from app.services.vote_service import VoteService
+from app.math.engine import MathematicalEngine
+from app.services.audit_service import AuditService
+from config import N
 
 # Simple API for data points with filtering
 
@@ -64,6 +104,13 @@ def update_user(user_id: UUID, user: UserUpdate, db: Session = Depends(get_db)):
 # Rotas para Mercados
 @app.post("/markets/", response_model=MarketSchema, status_code=status.HTTP_201_CREATED)
 def create_market(market: MarketCreate, db: Session = Depends(get_db)):
+    # Verificar se o número máximo de mercados foi atingido
+    existing_markets = db.query(Market).count()
+    if existing_markets >= N:
+        raise HTTPException(
+            status_code=400, detail=f"Número máximo de mercados atingido. Limite: {N}"
+        )
+
     db_market = Market(**market.dict())
     db.add(db_market)
     db.commit()
